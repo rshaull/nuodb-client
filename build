@@ -18,6 +18,7 @@ from client.package import Package
 from client.utils import Globals, info
 from client.utils import run, runout, mkdir, rmdir, rmfile, rmrf
 from client.utils import copyinto, copyfiles, loadfile, savefile
+from client.bundles import VersionTypes
 
 # Import all packages.  This forces them to register themselves.
 from client.pkg import *
@@ -36,6 +37,15 @@ GROUP = 'nuodb'
 
 PYTHONVERSION = 3
 
+
+def get_version(stg):
+    print(stg.bundle.value)
+    version_type = stg.bundle.get_version_type()
+    if version_type == VersionTypes.PACKAGE:
+        return stg.version # assumes all stages in package have same version
+    elif version_type == VersionTypes.DATE:
+        return datetime.now().strftime("%Y%m%d")
+    raise RuntimeError("Invalid Version type %s" % version_type)
 
 def build_clients(packages):
     buildid = Globals.buildid
@@ -65,14 +75,11 @@ def build_clients(packages):
     for pkgnm in packages:
         pkg = Package.get_package(pkgnm)
 
-        # Get the version from the package
-        # Currently all stages in a package have the same version
-        version = pkg.staged[0].version
-
         info("Installing package {} ...".format(pkg.name))
         for stg in pkg.staged:
             staged.append(stg)
-            pkgname = pkgname_template.format(stg.bundle.value, version, target)
+            version = get_version(stg)
+            pkgname = pkgname_template.format(stg.bundle, version, target)
             pkgnames.add(pkgname)
             pkgdir = os.path.join(Globals.finalroot, pkgname)
             clean_pkgdir(pkgdir)

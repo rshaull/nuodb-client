@@ -5,7 +5,7 @@ import json
 
 from client.utils import Globals, loadfile, savefile, getcontents
 from client.utils import mkdir, rmdir, rmfile, copy, copyinto
-from client.bundles import Bundle
+from client.bundles import Bundles
 
 class Stage(object):
     """Class representing the staged content of a client."""
@@ -31,7 +31,7 @@ class Stage(object):
         self.title = title
         self.requirements = requirements
         self.notes = notes
-        self.bundle = Bundle.default() if bundle is None else bundle
+        self.bundle = Bundles.default() if bundle is None else bundle
         self._staged = []
         self.omitcontents = []
         self.extracontents = []

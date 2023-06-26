@@ -9,7 +9,7 @@ from client.package import Package
 from client.stage import Stage
 from client.artifact import Artifact
 from client.utils import Globals, mkdir, rmdir, loadfile, unpack_file, verbose
-from client.bundles import Bundle
+from client.bundles import Bundles
 
 
 class NuoDBPackage(Package):
@@ -34,32 +34,32 @@ class NuoDBPackage(Package):
             'nuosql': Stage('nuosql',
                             title='nuosql',
                             requirements='GNU/Linux or Windows',
-                            bundle=Bundle.TOOLS),
+                            bundle=Bundles.TOOLS),
 
             'nuoloader': Stage('nuoloader',
                                title='nuoloader',
                                requirements='GNU/Linux or Windows',
-                               bundle=Bundle.TOOLS),
+                               bundle=Bundles.TOOLS),
 
             'nuodbmgr': Stage('nuodbmgr',
                               title='nuodbmgr',
                               requirements='Java 8 or 11',
-                              bundle=Bundle.TOOLS),
+                              bundle=Bundles.TOOLS),
 
             'nuoclient': Stage('nuoclient',
                                title='C Driver',
                                requirements='GNU/Linux or Windows',
-                               bundle=Bundle.C_DRIVER),
+                               bundle=Bundles.C_DRIVER),
 
             'nuoremote': Stage('nuoremote',
                                title='C++ Driver',
                                requirements='GNU/Linux or Windows',
-                               bundle=Bundle.CPP_DRIVER),
+                               bundle=Bundles.CPP_DRIVER),
 
             'nuodump': Stage('nuodump',
                              title='NuoDB Logical Backup Tool',
                              requirements='GNU/Linux or Windows',
-                             bundle=Bundle.TOOLS)
+                             bundle=Bundles.TOOLS)
         }
 
         self.staged = list(self.stgs.values())
