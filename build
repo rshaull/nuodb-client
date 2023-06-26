@@ -44,21 +44,35 @@ def build_clients(packages):
     commit = out if ret == 0 else 'UNK'
 
     target = Globals.target
-    pkgname = 'nuodb-client-{}.{}'.format(version, target)
+    pkgname_template = 'nuodb-{}-{}.{}'
 
     # This is handled inside Package so it can deal with prerequisites etc.
     Package.build_all(packages)
 
+    # Track all package names to return later
+    pkgnames = set()
+
+    # We want to recreate each pkgdir when it is first used
+    pkgdir_cleaned = set()
+    def clean_pkgdir(d):
+        if d in pkgdir_cleaned:
+            return
+        rmdir(d)
+        mkdir(d)
+        pkgdir_cleaned.add(d)
+
     # Now construct the final package from all the individual dist directories
-    pkgdir = os.path.join(Globals.finalroot, pkgname)
-    rmdir(pkgdir)
-    mkdir(pkgdir)
     staged = []
     for pkgnm in packages:
         pkg = Package.get_package(pkgnm)
+
         info("Installing package {} ...".format(pkg.name))
         for stg in pkg.staged:
             staged.append(stg)
+            pkgname = pkgname_template.format(stg.bundle.value, version, target)
+            pkgnames.add(pkgname)
+            pkgdir = os.path.join(Globals.finalroot, pkgname)
+            clean_pkgdir(pkgdir)
             copyinto(stg.stagedir, pkgdir)
 
     manifest = []
@@ -102,7 +116,7 @@ Contents:
     else:
         copyfiles(['nuodb_setup.bat'], Globals.etcdir, etc)
 
-    return pkgname
+    return pkgnames
 
 
 def create_package(pkgname):
@@ -211,10 +225,11 @@ def main():
         if 'all' in options.packages:
             options.packages = packages
 
-        pkgname = build_clients(options.packages)
+        pkgnames = build_clients(options.packages)
 
         if not options.no_package:
-            create_package(pkgname)
+            for pkgname in pkgnames:
+                create_package(pkgname)
 
     except ClientError as ex:
         sys.exit("Failed: {}".format(str(ex)))

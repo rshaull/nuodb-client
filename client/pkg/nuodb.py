@@ -9,6 +9,7 @@ from client.package import Package
 from client.stage import Stage
 from client.artifact import Artifact
 from client.utils import Globals, mkdir, rmdir, loadfile, unpack_file, verbose
+from client.bundles import Bundle
 
 
 class NuoDBPackage(Package):
@@ -32,26 +33,33 @@ class NuoDBPackage(Package):
         self.stgs = {
             'nuosql': Stage('nuosql',
                             title='nuosql',
-                            requirements='GNU/Linux or Windows'),
+                            requirements='GNU/Linux or Windows',
+                            bundle=Bundle.TOOLS),
 
             'nuoloader': Stage('nuoloader',
                                title='nuoloader',
-                               requirements='GNU/Linux or Windows'),
+                               requirements='GNU/Linux or Windows',
+                               bundle=Bundle.TOOLS),
 
             'nuodbmgr': Stage('nuodbmgr',
                               title='nuodbmgr',
-                              requirements='Java 8 or 11'),
+                              requirements='Java 8 or 11',
+                              bundle=Bundle.TOOLS),
 
             'nuoclient': Stage('nuoclient',
                                title='C Driver',
-                               requirements='GNU/Linux or Windows'),
+                               requirements='GNU/Linux or Windows',
+                               bundle=Bundle.C_DRIVER),
 
             'nuoremote': Stage('nuoremote',
                                title='C++ Driver',
-                               requirements='GNU/Linux or Windows'),
+                               requirements='GNU/Linux or Windows',
+                               bundle=Bundle.CPP_DRIVER),
+
             'nuodump': Stage('nuodump',
                              title='NuoDB Logical Backup Tool',
-                             requirements='GNU/Linux or Windows')
+                             requirements='GNU/Linux or Windows',
+                             bundle=Bundle.TOOLS)
         }
 
         self.staged = list(self.stgs.values())
