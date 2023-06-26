@@ -38,7 +38,6 @@ PYTHONVERSION = 3
 
 
 def build_clients(packages):
-    version = datetime.now().strftime("%Y%m%d")
     buildid = Globals.buildid
     (ret, out, err) = runout(['git', 'rev-parse', '--short=10', 'HEAD'])
     commit = out if ret == 0 else 'UNK'
@@ -65,6 +64,10 @@ def build_clients(packages):
     staged = []
     for pkgnm in packages:
         pkg = Package.get_package(pkgnm)
+
+        # Get the version from the package
+        # Currently all stages in a package have the same version
+        version = pkg.staged[0].version
 
         info("Installing package {} ...".format(pkg.name))
         for stg in pkg.staged:
