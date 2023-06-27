@@ -18,7 +18,6 @@ from client.package import Package
 from client.utils import Globals, info
 from client.utils import run, runout, mkdir, rmdir, rmfile, rmrf
 from client.utils import copyinto, copyfiles, loadfile, savefile
-from client.bundles import VersionTypes
 
 # Import all packages.  This forces them to register themselves.
 from client.pkg import *
@@ -37,15 +36,6 @@ GROUP = 'nuodb'
 
 PYTHONVERSION = 3
 
-
-def get_version(stg):
-    print(stg.bundle.value)
-    version_type = stg.bundle.get_version_type()
-    if version_type == VersionTypes.PACKAGE:
-        return stg.version # assumes all stages in package have same version
-    elif version_type == VersionTypes.DATE:
-        return datetime.now().strftime("%Y%m%d")
-    raise RuntimeError("Invalid Version type %s" % version_type)
 
 def build_clients(packages):
     buildid = Globals.buildid
@@ -78,7 +68,7 @@ def build_clients(packages):
         info("Installing package {} ...".format(pkg.name))
         for stg in pkg.staged:
             staged.append(stg)
-            version = get_version(stg)
+            version = Globals.version
             pkgname = pkgname_template.format(stg.bundle, version, target)
             pkgnames.add(pkgname)
             pkgdir = os.path.join(Globals.finalroot, pkgname)
@@ -152,10 +142,10 @@ def main():
     parser = argparse.ArgumentParser(description='Build the NuoDB Client package')
 
     parser.add_argument(
-        "-i",
-        "--info",
-        action="store_true",
-        help="Show information about known client packages")
+        '--version',
+        # TODO make required when not cleaning
+        # TODO cast to Version type and must be validated
+        help='Version to use for each bundle')
 
     parser.add_argument(
         "-v",
@@ -198,7 +188,8 @@ def main():
 
     options = parser.parse_args()
 
-    kwargs = {'isverbose': options.verbose,
+    kwargs = {'version': options.version,
+              'isverbose': options.verbose,
               'target': options.platform,
               'buildid': options.build}
 
@@ -231,6 +222,9 @@ def main():
                     info('{}: Cleaning'.format(name))
                     pkg.clean(real=options.real_clean)
             return
+
+        if options.version is None:
+            parser.error('Must specify --version to build packages')
 
         if 'all' in options.packages:
             options.packages = packages

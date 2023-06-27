@@ -49,7 +49,7 @@ class NuoDBPackage(Package):
             'nuoclient': Stage('nuoclient',
                                title='C Driver',
                                requirements='GNU/Linux or Windows',
-                               bundle=Bundles.C_DRIVER),
+                               bundle=Bundles.CPP_DRIVER),
 
             'nuoremote': Stage('nuoremote',
                                title='C++ Driver',
