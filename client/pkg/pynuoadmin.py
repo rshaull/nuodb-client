@@ -9,6 +9,7 @@ from client.artifact import PyPIMetadata
 from client.package import Package
 from client.stage import Stage
 from client.utils import Globals, getcontents, rmdir, mkdir, pipinstall
+from client.bundles import Bundles
 
 
 class PyNuoadminPackage(Package):
@@ -26,7 +27,8 @@ This pulls the latest version available from PyPI.
 
         self.staged = [Stage(self.__PKGNAME,
                              title='NuoAdmin Driver',
-                             requirements='Python 3')]
+                             requirements='Python 3',
+                             bundle=Bundles.TOOLS)]
 
         self.stage = self.staged[0]
 

@@ -9,6 +9,7 @@ from client.artifact import PyPIMetadata
 from client.package import Package
 from client.stage import Stage
 from client.utils import rmdir, mkdir, pipinstall, getcontents
+from client.bundles import Bundles
 
 
 class PyNuodbPackage(Package):
@@ -23,6 +24,7 @@ class PyNuodbPackage(Package):
         self.staged = [Stage(self.__PKGNAME,
                              title='Python Driver',
                              requirements='Python 2 or 3',
+                             bundle=Bundles.TOOLS,
                              notes="""
     For improved performance, install the Python cryptography package:
         python -m pip install cryptography
