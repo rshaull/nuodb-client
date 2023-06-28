@@ -57,7 +57,7 @@ class NuoDBPackage(Package):
                                bundle=Bundles.CPP_DRIVER),
 
             'nuodump': Stage('nuodump',
-                             title='NuoDB Logical Backup Tool',
+                             title='nuodump',
                              requirements='GNU/Linux or Windows',
                              bundle=Bundles.TOOLS)
         }
