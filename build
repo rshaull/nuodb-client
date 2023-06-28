@@ -5,6 +5,38 @@
 Command-line tool for building the NuoDB client package.
 """
 
+# Package: Released (publicly downloadable) artifact (like nuodb)
+# Stage: Software within a package (like nuosql within nuodb)
+# Bundle: Convenience grouping of stages from 1 or more packages
+#
+# This tool produces one or more bundles that group together
+# stages as a convenience for users. Bundles group related stages
+# (like client tools or drivers) and all their dependencies into
+# a single tarball.
+#
+# Bundles are defined in the Bundles Enum in client.bundles.
+#
+# Package information describes how to download and unpack a
+# downloadable release. Packages are defined in client.pkg.*.
+# Every package defines at least one stage.
+#
+# Stages are defined in client.pkg.*. Each Stage is labeled
+# with a bundle when it is instantiated. A Stage's bundle determines
+# which tarball it ends up in.
+#
+# Every stage is labeled with a version, but currently we assume
+# that every stage in a package has the same version (the version
+# of the package).
+#
+# Bundles are versioned separately from any stage they contain.
+# You *must* specify a version to use for *every* bundle generated
+# in a single invocation of this build tool. A manifest will be
+# generated for each bundle, which will include the version of
+# each stage contained therein.
+
+# TODO create markdown manifest for all bundles to copy/paste to release page
+# TODO do not list dependencies in bundles / allow hiding a stage in a bundle (hidden from README and manifest)
+
 import os
 import sys
 import argparse
@@ -12,6 +44,7 @@ import re
 
 from string import Template
 from datetime import datetime
+from collections import defaultdict
 
 from client.exceptions import ClientError
 from client.package import Package
@@ -37,6 +70,41 @@ GROUP = 'nuodb'
 PYTHONVERSION = 3
 
 
+def build_manifest(bundle_version, buildid, commit, pkgdir, stages):
+    stage_names = []
+    stage_notes = []
+    for stg in sorted(stages, key=lambda x: x.title):
+        stage_names.append('  * {} version {}'.format(stg.title, stg.version))
+        if stg.notes is None:
+            notes = ''
+        else:
+            notes = '\nNotes:{}'.format(stg.notes)
+        stage_notes.append("""{}
+{}
+
+Version: {}
+Requirements: {}{}
+
+Contents:
+  {}""".format(stg.title,
+               '-'*len(stg.title),
+               stg.version,
+               stg.requirements,
+               notes,
+               '\n  '.join(sorted(stg.getcontents()))))
+
+    # Construct the various values for the README file
+    replace = {'VERSION': bundle_version,
+               'BUILD': buildid,
+               'COMMIT': commit,
+               'LICENSE': Package.getlicense('3BSD'),
+               'MANIFEST': '\n'.join(stage_names),
+               'PACKAGES': '\n\n'.join(stage_notes)}
+
+    readme = loadfile('README.in')
+    savefile(os.path.join(pkgdir, 'README.txt'),
+             Template(readme).substitute(replace))
+
 def build_clients(packages):
     buildid = Globals.buildid
     (ret, out, err) = runout(['git', 'rev-parse', '--short=10', 'HEAD'])
@@ -61,53 +129,22 @@ def build_clients(packages):
         pkgdir_cleaned.add(d)
 
     # Now construct the final package from all the individual dist directories
-    staged = []
+    bundle_contents = defaultdict(list)
     for pkgnm in packages:
         pkg = Package.get_package(pkgnm)
 
         info("Installing package {} ...".format(pkg.name))
         for stg in pkg.staged:
-            staged.append(stg)
-            version = Globals.version
-            pkgname = pkgname_template.format(stg.bundle, version, target)
+            bundle_version = Globals.version
+            pkgname = pkgname_template.format(stg.bundle, bundle_version, target)
             pkgnames.add(pkgname)
             pkgdir = os.path.join(Globals.finalroot, pkgname)
             clean_pkgdir(pkgdir)
             copyinto(stg.stagedir, pkgdir)
+            bundle_contents[pkgdir].append(stg)
 
-    manifest = []
-    packages = []
-    for stg in sorted(staged, key=lambda x: x.title):
-        manifest.append('  * {} version {}'.format(stg.title, stg.version))
-        if stg.notes is None:
-            notes = ''
-        else:
-            notes = '\nNotes:{}'.format(stg.notes)
-        packages.append("""{}
-{}
-
-Version: {}
-Requirements: {}{}
-
-Contents:
-  {}""".format(stg.title,
-               '-'*len(stg.title),
-               stg.version,
-               stg.requirements,
-               notes,
-               '\n  '.join(sorted(stg.getcontents()))))
-
-    # Construct the various values for the README file
-    replace = {'VERSION': version,
-               'BUILD': buildid,
-               'COMMIT': commit,
-               'LICENSE': Package.getlicense('3BSD'),
-               'MANIFEST': '\n'.join(manifest),
-               'PACKAGES': '\n\n'.join(packages)}
-
-    readme = loadfile('README.in')
-    savefile(os.path.join(pkgdir, 'README.txt'),
-             Template(readme).substitute(replace))
+    for pkgdir, stages in bundle_contents.items():
+        build_manifest(bundle_version, buildid, commit, pkgdir, stages)
 
     etc = os.path.join(pkgdir, 'etc')
     mkdir(etc)
@@ -143,8 +180,6 @@ def main():
 
     parser.add_argument(
         '--version',
-        # TODO make required when not cleaning
-        # TODO cast to Version type and must be validated
         help='Version to use for each bundle')
 
     parser.add_argument(
