@@ -24,6 +24,12 @@ Command-line tool for building the NuoDB client package.
 # with a bundle when it is instantiated. A Stage's bundle determines
 # which tarball it ends up in.
 #
+# If you do not want to include a stage in a bundle explicitly,
+# set its bundle to None. A stage can still be pulled into a bundle
+# as a dependency, but it won't be put into a bundle otherwise.
+# A stage that is only pulled into a bundle as a dependency will
+# not be explicitly listed in the manifest.
+#
 # Every stage is labeled with a version, but currently we assume
 # that every stage in a package has the same version (the version
 # of the package).
@@ -35,7 +41,6 @@ Command-line tool for building the NuoDB client package.
 # each stage contained therein.
 
 # TODO create markdown manifest for all bundles to copy/paste to release page
-# TODO do not list dependencies in bundles / allow hiding a stage in a bundle (hidden from README and manifest)
 
 import os
 import sys
@@ -135,6 +140,8 @@ def build_clients(packages):
 
         info("Installing package {} ...".format(pkg.name))
         for stg in pkg.staged:
+            if stg.bundle is None:
+                continue
             bundle_version = Globals.version
             pkgname = pkgname_template.format(stg.bundle, bundle_version, target)
             pkgnames.add(pkgname)
