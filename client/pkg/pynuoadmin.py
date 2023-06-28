@@ -28,7 +28,7 @@ This pulls the latest version available from PyPI.
         self.staged = [Stage(self.__PKGNAME,
                              title='NuoAdmin Driver',
                              requirements='Python 3',
-                             bundle=Bundles.TOOLS)]
+                             bundle=None)]
 
         self.stage = self.staged[0]
 

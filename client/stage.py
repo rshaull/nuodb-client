@@ -31,7 +31,7 @@ class Stage(object):
         self.title = title
         self.requirements = requirements
         self.notes = notes
-        self.bundle = Bundles.default() if bundle is None else bundle
+        self.bundle = bundle
         self._staged = []
         self.omitcontents = []
         self.extracontents = []

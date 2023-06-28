@@ -1,1 +1,1 @@
-__all__ = ['nuodb', 'pynuoadmin', 'pynuodb']
+__all__ = ['nuodb', 'pynuoadmin', 'pynuodb', 'nuocmd']
