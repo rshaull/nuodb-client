@@ -50,6 +50,7 @@ import re
 from string import Template
 from datetime import datetime
 from collections import defaultdict
+from itertools import starmap
 
 from client.exceptions import ClientError
 from client.package import Package
@@ -75,7 +76,20 @@ GROUP = 'nuodb'
 PYTHONVERSION = 3
 
 
-def build_manifest(bundle_version, buildid, commit, pkgdir, stages):
+def pkgname_to_pkgdir(pkgname):
+    return os.path.join(Globals.finalroot, pkgname)
+
+def build_readme(bundle_contents):
+    def stage_to_s(stg):
+        return '* {} version {}'.format(stg.title, stg.version)
+    def bundle_to_s(name, stages):
+        return '### {}\n'.format(name) + '\n'.join(map(stage_to_s, stages))
+    readme = '\n\n'.join(starmap(bundle_to_s, bundle_contents.items())) + '\n'
+    savefile(os.path.join(Globals.finalroot, 'README.md'),
+             readme)
+
+def build_manifest(bundle_version, buildid, commit, pkgname, stages):
+    pkgdir = pkgname_to_pkgdir(pkgname)
     stage_names = []
     stage_notes = []
     for stg in sorted(stages, key=lambda x: x.title):
@@ -142,16 +156,16 @@ def build_clients(packages):
         for stg in pkg.staged:
             if stg.bundle is None:
                 continue
-            bundle_version = Globals.version
-            pkgname = pkgname_template.format(stg.bundle, bundle_version, target)
+            pkgname = pkgname_template.format(stg.bundle, Globals.version, target)
             pkgnames.add(pkgname)
-            pkgdir = os.path.join(Globals.finalroot, pkgname)
+            pkgdir = pkgname_to_pkgdir(pkgname)
             clean_pkgdir(pkgdir)
             copyinto(stg.stagedir, pkgdir)
-            bundle_contents[pkgdir].append(stg)
+            bundle_contents[pkgname].append(stg)
 
-    for pkgdir, stages in bundle_contents.items():
-        build_manifest(bundle_version, buildid, commit, pkgdir, stages)
+    for pkgname, stages in bundle_contents.items():
+        build_manifest(Globals.version, buildid, commit, pkgname, stages)
+    print(build_readme(bundle_contents))
 
     etc = os.path.join(pkgdir, 'etc')
     mkdir(etc)
