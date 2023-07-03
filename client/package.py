@@ -96,6 +96,11 @@ class Package(object):
         for stg in self.staged:
             stg.version = version
 
+    def set_repo(self, title, repo_url):
+        for stg in self.staged:
+            stg.repo_title = title
+            stg.repo_url = repo_url
+
     def build(self):
         assert not self.building
 

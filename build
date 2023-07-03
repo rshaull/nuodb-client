@@ -39,8 +39,13 @@ Command-line tool for building the NuoDB client package.
 # in a single invocation of this build tool. A manifest will be
 # generated for each bundle, which will include the version of
 # each stage contained therein.
-
-# TODO create markdown manifest for all bundles to copy/paste to release page
+#
+# By default all bundles are included in the same .tar.gz. The
+# manifest and README generators will use bundle information for
+# grouping stages together.
+#
+# To create one .tar.gz per bundle (.tar.gz name includes the
+# bundle name), pass the --separate-bundles option.
 
 import os
 import sys
@@ -75,18 +80,32 @@ GROUP = 'nuodb'
 
 PYTHONVERSION = 3
 
+DEFAULT_BUNDLE_NAME = 'tools'
+
+
+def bundle_to_pkgname(bundle, target):
+    pkgname_template = 'nuodb-{}-{}.{}'
+    b = bundle if Globals.separate_bundles else DEFAULT_BUNDLE_NAME
+    return pkgname_template.format(b, Globals.version, target)
+
 
 def pkgname_to_pkgdir(pkgname):
     return os.path.join(Globals.finalroot, pkgname)
 
+
 def build_readme(bundle_contents):
     def stage_to_s(stg):
-        return '* {} version {}'.format(stg.title, stg.version)
-    def bundle_to_s(name, stages):
-        return '### {}\n'.format(name) + '\n'.join(map(stage_to_s, stages))
+        return '* {} version {} (bundled from: [{}]({}))'.format(
+            stg.title,
+            stg.version,
+            stg.repo_title,
+            stg.repo_url)
+    def bundle_to_s(title, stages):
+        return '### {}\n'.format(title) + '\n'.join(map(stage_to_s, stages))
     readme = '\n\n'.join(starmap(bundle_to_s, bundle_contents.items())) + '\n'
     savefile(os.path.join(Globals.finalroot, 'README.md'),
              readme)
+
 
 def build_manifest(bundle_version, buildid, commit, pkgname, stages):
     pkgdir = pkgname_to_pkgdir(pkgname)
@@ -124,13 +143,13 @@ Contents:
     savefile(os.path.join(pkgdir, 'README.txt'),
              Template(readme).substitute(replace))
 
+
 def build_clients(packages):
     buildid = Globals.buildid
     (ret, out, err) = runout(['git', 'rev-parse', '--short=10', 'HEAD'])
     commit = out if ret == 0 else 'UNK'
 
     target = Globals.target
-    pkgname_template = 'nuodb-{}-{}.{}'
 
     # This is handled inside Package so it can deal with prerequisites etc.
     Package.build_all(packages)
@@ -148,6 +167,12 @@ def build_clients(packages):
         pkgdir_cleaned.add(d)
 
     # Now construct the final package from all the individual dist directories
+    #
+    # tarball_contents is used to build the per tarball README / manifest
+    # bundle_contents is used to build the overall README / manifest for the release notes
+    #
+    # If --separate-packages is set, then tarball_contents and bundle_contents will contain the same contents
+    tarball_contents = defaultdict(list)
     bundle_contents = defaultdict(list)
     for pkgnm in packages:
         pkg = Package.get_package(pkgnm)
@@ -156,16 +181,17 @@ def build_clients(packages):
         for stg in pkg.staged:
             if stg.bundle is None:
                 continue
-            pkgname = pkgname_template.format(stg.bundle, Globals.version, target)
+            pkgname = bundle_to_pkgname(stg.bundle, target)
             pkgnames.add(pkgname)
             pkgdir = pkgname_to_pkgdir(pkgname)
             clean_pkgdir(pkgdir)
             copyinto(stg.stagedir, pkgdir)
-            bundle_contents[pkgname].append(stg)
+            tarball_contents[pkgname].append(stg)
+            bundle_contents[stg.bundle['title']].append(stg)
 
-    for pkgname, stages in bundle_contents.items():
+    for pkgname, stages in tarball_contents.items():
         build_manifest(Globals.version, buildid, commit, pkgname, stages)
-    print(build_readme(bundle_contents))
+    build_readme(bundle_contents)
 
     etc = os.path.join(pkgdir, 'etc')
     mkdir(etc)
@@ -237,6 +263,11 @@ def main():
         help="Clean previous builds and downloads.")
 
     parser.add_argument(
+        '--separate-bundles',
+        action='store_true',
+        help='Create a separate .tar.gz per bundle.')
+
+    parser.add_argument(
         'packages',
         metavar='PKGS',
         nargs='*',
@@ -247,7 +278,8 @@ def main():
     kwargs = {'version': options.version,
               'isverbose': options.verbose,
               'target': options.platform,
-              'buildid': options.build}
+              'buildid': options.build,
+              'separate_bundles': options.separate_bundles}
 
     for arg in list(options.packages):
         m = re.match(r'([^=]+)=([^\d].*)', arg)

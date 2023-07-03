@@ -26,12 +26,13 @@ class Stage(object):
     # Any files here will be added to the generated results
     extracontents = None
 
-    def __init__(self, name, title=None, requirements=None, notes=None, bundle=None):
+    def __init__(self, name, title=None, requirements=None, notes=None, bundle=None, package=None):
         self.name = name
         self.title = title
         self.requirements = requirements
         self.notes = notes
         self.bundle = bundle
+        self.package = package
         self._staged = []
         self.omitcontents = []
         self.extracontents = []

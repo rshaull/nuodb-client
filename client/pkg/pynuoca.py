@@ -31,6 +31,7 @@ class PyNuoCA(Package):
 
     def unpack(self):
         pypi = PyPIMetadata(self.__PKGNAME)
+        self.set_repo(pypi.friendlytitle, pypi.friendlyurl)
         self.setversion(pypi.version)
 
         rmdir(self.pkgroot)

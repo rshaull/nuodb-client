@@ -32,34 +32,40 @@ class NuoDBPackage(Package):
 
         self.stgs = {
             'nuosql': Stage('nuosql',
-                            title='nuosql',
+                            title='NuoDB SQL (nuosql)',
                             requirements='GNU/Linux or Windows',
-                            bundle=Bundles.TOOLS),
+                            bundle=Bundles.CLI_TOOLS,
+                            package=self.__PKGNAME),
 
             'nuoloader': Stage('nuoloader',
-                               title='nuoloader',
+                               title='NuoDB Loader (nuoloader)',
                                requirements='GNU/Linux or Windows',
-                               bundle=Bundles.TOOLS),
+                               bundle=Bundles.CLI_TOOLS,
+                               package=self.__PKGNAME),
 
             'nuodbmgr': Stage('nuodbmgr',
                               title='nuodbmgr',
                               requirements='Java 8 or 11',
-                              bundle=Bundles.TOOLS),
+                              bundle=Bundles.CLI_TOOLS,
+                              package=self.__PKGNAME),
 
             'nuoclient': Stage('nuoclient',
                                title='C Driver',
                                requirements='GNU/Linux or Windows',
-                               bundle=Bundles.CPP_DRIVER),
+                               bundle=Bundles.DRIVERS,
+                               package=self.__PKGNAME),
 
             'nuoremote': Stage('nuoremote',
                                title='C++ Driver',
                                requirements='GNU/Linux or Windows',
-                               bundle=Bundles.CPP_DRIVER),
+                               bundle=Bundles.DRIVERS,
+                               package=self.__PKGNAME),
 
             'nuodump': Stage('nuodump',
-                             title='nuodump',
+                             title='NuoDB Dumper (nuodump)',
                              requirements='GNU/Linux or Windows',
-                             bundle=Bundles.TOOLS)
+                             bundle=Bundles.CLI_TOOLS,
+                             package=self.__PKGNAME)
         }
 
         self.staged = list(self.stgs.values())
@@ -98,6 +104,8 @@ class NuoDBPackage(Package):
                 self._pkg.update()
             except DownloadError:
                 raise ex
+
+        self.set_repo('NuoDB Server Package', self._pkg.url)
 
     def unpack(self):
         rmdir(self.pkgroot)

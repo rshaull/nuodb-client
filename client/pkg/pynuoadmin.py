@@ -26,9 +26,10 @@ This pulls the latest version available from PyPI.
         self._ac_file = None
 
         self.staged = [Stage(self.__PKGNAME,
-                             title='NuoAdmin Driver',
+                             title='NuoAdmin Driver (pynuoadmin)',
                              requirements='Python 3',
-                             bundle=None)]
+                             bundle=Bundles.DRIVERS,
+                             package=self.__PKGNAME)]
 
         self.stage = self.staged[0]
 
@@ -38,6 +39,7 @@ This pulls the latest version available from PyPI.
 
     def unpack(self):
         pypi = PyPIMetadata(self.__PKGNAME)
+        self.set_repo(pypi.friendlytitle, pypi.friendlyurl)
         self.setversion(pypi.version)
 
         rmdir(self.pkgroot)
