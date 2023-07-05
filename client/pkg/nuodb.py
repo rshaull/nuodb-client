@@ -62,7 +62,7 @@ class NuoDBPackage(Package):
                                package=self.__PKGNAME),
 
             'nuodump': Stage('nuodump',
-                             title='NuoDB Dumper (nuodump)',
+                             title='NuoDB Dump (nuodump)',
                              requirements='GNU/Linux or Windows',
                              bundle=Bundles.CLI_TOOLS,
                              package=self.__PKGNAME)
