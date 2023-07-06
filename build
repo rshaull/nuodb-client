@@ -85,7 +85,7 @@ DEFAULT_BUNDLE_NAME = 'tools'
 
 def bundle_to_pkgname(bundle, target):
     pkgname_template = 'nuodb-{}-{}.{}'
-    b = bundle if Globals.separate_bundles else DEFAULT_BUNDLE_NAME
+    b = str(bundle) if Globals.separate_bundles else DEFAULT_BUNDLE_NAME
     return pkgname_template.format(b, Globals.version, target)
 
 
